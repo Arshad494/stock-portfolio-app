@@ -59,7 +59,7 @@ def get_db_connection():
     return sqlite3.connect(DB_FILE)
 
 def format_inr(amount):
-    \"\"\"Format currency in Indian Rupee format.\"\"\"
+    """Format currency in Indian Rupee format."""
     return f"₹{amount:,.2f}"
 
 # --- 3. DATA LOADING & PROCESSING ---
@@ -96,7 +96,7 @@ DEFAULT_TICKER_MAPPING = {
 }
 
 def normalize_ticker(name_or_ticker):
-    \"\"\"Robust mapping of company names to Yahoo Finance Tickers.\"\"\"
+    """Robust mapping of company names to Yahoo Finance Tickers."""
     if pd.isna(name_or_ticker) or str(name_or_ticker).strip() == "":
         return None
         
@@ -117,7 +117,7 @@ def normalize_ticker(name_or_ticker):
 
 @st.cache_data(ttl=300)
 def get_realtime_price(ticker):
-    \"\"\"Fetch current price with caching.\"\"\"
+    """Fetch current price with caching."""
     try:
         data = yf.Ticker(ticker).history(period="1d", interval="1m")
         if not data.empty:
@@ -132,7 +132,7 @@ def get_realtime_price(ticker):
 
 @st.cache_data(ttl=3600)
 def get_stock_info(ticker):
-    \"\"\"Fetch basic info like sector.\"\"\"
+    """Fetch basic info like sector."""
     try:
         info = yf.Ticker(ticker).info
         return info
@@ -140,7 +140,7 @@ def get_stock_info(ticker):
         return {}
 
 def load_and_process_file(uploaded_file):
-    \"\"\"Process uploaded file with broker auto-detection.\"\"\"
+    """Process uploaded file with broker auto-detection."""
     try:
         # Load logic based on extension
         if uploaded_file.name.endswith('.csv'):
@@ -206,7 +206,7 @@ def load_and_process_file(uploaded_file):
         return None, f"Error processing file: {e}"
 
 def get_portfolio_metrics():
-    \"\"\"Calculate all portfolio metrics from DB.\"\"\"
+    """Calculate all portfolio metrics from DB."""
     conn = get_db_connection()
     df = pd.read_sql("SELECT ticker, quantity, avg_price FROM holdings", conn)
     conn.close()
@@ -264,7 +264,7 @@ def get_portfolio_metrics():
     return metrics_df, df, total_inv, total_val
 
 def export_to_excel(metrics_df):
-    \"\"\"Export portfolio to Excel.\"\"\"
+    """Export portfolio to Excel."""
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         metrics_df.to_excel(writer, sheet_name='Holdings', index=False)
@@ -280,7 +280,7 @@ def export_to_excel(metrics_df):
 # --- 4. AI INTEGRATION ---
 
 def query_ai(provider, api_key, model, context, question):
-    system_prompt = \"You are an expert financial assistant for Arshad's Portfolio. Analyze the provided portfolio data. Be concise, actionable, and data-driven.\"
+    system_prompt = "You are an expert financial assistant for Arshad's Portfolio. Analyze the provided portfolio data. Be concise, actionable, and data-driven."
     context_str = json.dumps(context, indent=2)
     
     if provider == "OpenAI" and HAS_OPENAI:
@@ -289,9 +289,7 @@ def query_ai(provider, api_key, model, context, question):
             resp = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "system", "content": system_prompt},
-                          {"role": "user", "content": f"Context: {context_str}\
-\
-Q: {question}"}]
+                          {"role": "user", "content": f"Context: {context_str}\n\nQ: {question}"}]
             )
             return resp.choices[0].message.content
         except Exception as e: return f"Error: {e}"
@@ -300,9 +298,7 @@ Q: {question}"}]
         try:
             genai.configure(api_key=api_key)
             m = genai.GenerativeModel(model)
-            resp = m.generate_content(f"{system_prompt}\
-Context: {context_str}\
-Q: {question}")
+            resp = m.generate_content(f"{system_prompt}\nContext: {context_str}\nQ: {question}")
             return resp.text
         except Exception as e: return f"Error: {e}"
         
